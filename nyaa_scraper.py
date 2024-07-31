@@ -62,10 +62,8 @@ def fetch_torrent_info(torrent_id):
             if body:
                 comment = {
                     "name": body.find('a').text.strip() if body.find('a') else "Unknown User",
-                    "content": body.find('div', class_='comment-body').find('div', class_='comment-content').text.strip() if body.find('div', class_='comment-body') and body.find('div', class_='comment-body').find('div', class_='comment-content') else "No content",
-                    "image": Constants.NyaaBaseUrl + body.find('img', class_='avatar')['src'] if body.find('img', class_='avatar') else Constants.DefaultProfilePic,
-                    "timestamp": body.find('a').find('small')['title'].strip() if body.find('a') and body.find('a').find('small') else "Unknown Timestamp"
-                }
+                    "content": body.find('div', class_='comment-body').find('div', class_='comment-content').text.strip() if body.find('div', class_='comment-body') and body.find('div', class_='comment-body').find('div', class_='comment-content') else "No content"
+                          }
                 comments.append(comment)
 
     file_info = {
