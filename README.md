@@ -15,24 +15,6 @@ This project is a Python-based web scraper for the Nyaa torrent site. It fetches
 - `requests` library
 - `beautifulsoup4` library
 
-## Installation
-
-1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/yourusername/nyaa-api-scraper.git
-    cd nyaa-api-scraper
-    ```
-
-2. **Install the required Python libraries**:
-    ```sh
-    pip install -r requirements.txt
-    ```
-
-    If you don't have `requirements.txt`, you can manually install the libraries:
-    ```sh
-    pip install requests beautifulsoup4
-    ```
-
 ## Usage
 
 The script can be used to scrape different types of data from Nyaa. Below are the available commands and how to use them.
