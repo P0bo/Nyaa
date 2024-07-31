@@ -2,35 +2,45 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import sys
+import re
 
 class Constants:
     NyaaBaseUrl = "https://nyaa.si"
     DefaultProfilePic = "https://i.imgur.com/TKkz0qM.png"
+
+def sanitize_filename(name):
+    """Remove disallowed characters from the filename."""
+    # Define the allowed characters regex (CJK characters, alphanumeric, and specific symbols)
+    allowed_chars = r'[^a-zA-Z0-9\(\)\[\]\.\,\-\_一-龥ぁ-ゔァ-ヴー々〆〤\u4E00-\u9FFF]'
+
+    # Replace disallowed characters with underscores
+    sanitized_name = re.sub(allowed_chars, '_', name)
+
+    # Limit the filename length to avoid OS-specific issues
+    return sanitized_name[:255]
 
 def fetch_torrent_info(torrent_id):
     url = f"{Constants.NyaaBaseUrl}/view/{torrent_id}"
     response = requests.get(url)
 
     if response.status_code != 200:
-        print(f"Failed to fetch torrent info for ID {torrent_id}. Status code: {response.status_code}")
-        return
+        print(f"Skipped {torrent_id}")
+        return False
 
     soup = BeautifulSoup(response.text, 'html.parser')
     panel = soup.find('div', class_='panel panel-default')
 
     if not panel:
-        print("No panel found. The structure might be different.")
-        return
-
-    print("Panel found")
+        print(f"Skipped {torrent_id} - No panel found.")
+        return False
 
     rows = panel.find_all('div', class_='row')
 
     try:
+        title = panel.find('h3', class_='panel-title').text.strip() if panel.find('h3', class_='panel-title') else "Unknown Title"
         torrent_data = {
             "id": int(torrent_id),
-            "title": panel.find('h3', class_='panel-title').text.strip() if panel.find('h3', class_='panel-title') else "Unknown Title",
-            # Use the correct attribute and structure to get the file and magnet links
+            "title": title,
             "file": Constants.NyaaBaseUrl + panel.find('a', href=lambda x: x and x.endswith('.torrent'))['href'] if panel.find('a', href=lambda x: x and x.endswith('.torrent')) else "Unknown File URL",
             "magnet": panel.find('a', href=lambda x: x and x.startswith('magnet:'))['href'] if panel.find('a', href=lambda x: x and x.startswith('magnet:')) else "Unknown Magnet URL",
             "size": rows[3].find_all('div', class_='col-md-5')[0].text.strip() if len(rows[3].find_all('div', class_='col-md-5')) > 0 else "Unknown Size",
@@ -42,10 +52,8 @@ def fetch_torrent_info(torrent_id):
             "info_hash": rows[4].find('div', class_='col-md-5').text.strip() if rows[4].find('div', class_='col-md-5') else "Unknown Info Hash"
         }
     except IndexError as e:
-        print("An error occurred while accessing panel data:", e)
-        return
-
-    print("Torrent data extracted:", torrent_data)
+        print(f"Skipped {torrent_id} - Error parsing data: {e}")
+        return False
 
     description = soup.find('div', id='torrent-description').text.strip() if soup.find('div', id='torrent-description') else "No description available"
     comments_section = soup.find('div', id='comments')
@@ -60,7 +68,6 @@ def fetch_torrent_info(torrent_id):
 
     comments = []
 
-    # In the new structure, comments are missing
     if comment_count > 0:
         comment_panels = comments_section.find_all('div', class_='comment-panel')
         for panel in comment_panels:
@@ -81,15 +88,25 @@ def fetch_torrent_info(torrent_id):
         }
     }
 
-    with open(f"{torrent_id}.json", "w", encoding='utf-8') as f:
+    # Sanitize the title for a valid filename
+    filename = sanitize_filename(title) + ".json"
+    with open(filename, "w", encoding='utf-8') as f:
         json.dump(file_info, f, ensure_ascii=False, indent=4)
 
-    print(f"Information saved to {torrent_id}.json")
+    print(f"Fetched {torrent_id}")
+    return True
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python nyaa_scraper.py <id>")
+        print("Usage: python nyaa_scraper.py <id_start-id_end>")
         sys.exit(1)
 
-    torrent_id = sys.argv[1]
-    fetch_torrent_info(torrent_id)
+    id_range = sys.argv[1]
+    try:
+        start_id, end_id = map(int, id_range.split('-'))
+    except ValueError:
+        print("Invalid range format. Use <id_start-id_end>")
+        sys.exit(1)
+
+    for torrent_id in range(start_id, end_id + 1):
+        fetch_torrent_info(torrent_id)
