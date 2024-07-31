@@ -63,7 +63,7 @@ def fetch_torrent_info(torrent_id):
                 comment = {
                     "name": body.find('a').text.strip() if body.find('a') else "Unknown User",
                     "content": body.find('div', class_='comment-body').find('div', class_='comment-content').text.strip() if body.find('div', class_='comment-body') and body.find('div', class_='comment-body').find('div', class_='comment-content') else "No content"
-                          }
+                }
                 comments.append(comment)
 
     file_info = {
