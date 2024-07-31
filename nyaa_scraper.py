@@ -16,8 +16,8 @@ def fetch_torrent_info(torrent_id):
         return
 
     soup = BeautifulSoup(response.text, 'html.parser')
-    panel = soup.find('div', class_='panel panel-danger')
-    
+    panel = soup.find('div', class_='panel panel-default')
+
     if not panel:
         print("No panel found. The structure might be different.")
         return
@@ -26,16 +26,13 @@ def fetch_torrent_info(torrent_id):
 
     rows = panel.find_all('div', class_='row')
 
-    if len(rows) < 5:
-        print("Not enough rows found in the panel")
-        return
-
     try:
         torrent_data = {
             "id": int(torrent_id),
-            "title": panel.select_one("h3.panel-title").get_text(strip=True) if panel.select_one("h3.panel-title") else "Unknown Title",
-            "file": Constants.NyaaBaseUrl + panel.find('div', class_='panel-footer').find('a')['href'] if panel.find('div', class_='panel-footer') and panel.find('div', class_='panel-footer').find('a') else "Unknown File URL",
-            "magnet": panel.find('div', class_='panel-footer').find_all('a')[1]['href'] if panel.find('div', class_='panel-footer') and len(panel.find('div', class_='panel-footer').find_all('a')) > 1 else "Unknown Magnet URL",
+            "title": panel.find('h3', class_='panel-title').text.strip() if panel.find('h3', class_='panel-title') else "Unknown Title",
+            # Use the correct attribute and structure to get the file and magnet links
+            "file": Constants.NyaaBaseUrl + panel.find('a', href=lambda x: x and x.endswith('.torrent'))['href'] if panel.find('a', href=lambda x: x and x.endswith('.torrent')) else "Unknown File URL",
+            "magnet": panel.find('a', href=lambda x: x and x.startswith('magnet:'))['href'] if panel.find('a', href=lambda x: x and x.startswith('magnet:')) else "Unknown Magnet URL",
             "size": rows[3].find_all('div', class_='col-md-5')[0].text.strip() if len(rows[3].find_all('div', class_='col-md-5')) > 0 else "Unknown Size",
             "category": rows[0].find_all('div', class_='col-md-5')[0].text.strip() if len(rows[0].find_all('div', class_='col-md-5')) > 0 else "Unknown Category",
             "uploaded": rows[0].find_all('div', class_='col-md-5')[1].text.strip() if len(rows[0].find_all('div', class_='col-md-5')) > 1 else "Unknown Upload Date",
@@ -52,9 +49,18 @@ def fetch_torrent_info(torrent_id):
 
     description = soup.find('div', id='torrent-description').text.strip() if soup.find('div', id='torrent-description') else "No description available"
     comments_section = soup.find('div', id='comments')
-    comment_count = int(comments_section.find('h3', class_='panel-title').text.split('-')[-1].strip()) if comments_section and comments_section.find('h3', class_='panel-title') else 0
+
+    if comments_section:
+        try:
+            comment_count = int(comments_section.find('h3', class_='panel-title').text.split('-')[-1].strip())
+        except (AttributeError, ValueError):
+            comment_count = 0
+    else:
+        comment_count = 0
+
     comments = []
 
+    # In the new structure, comments are missing
     if comment_count > 0:
         comment_panels = comments_section.find_all('div', class_='comment-panel')
         for panel in comment_panels:
