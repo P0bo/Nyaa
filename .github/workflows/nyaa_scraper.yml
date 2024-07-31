@@ -1,0 +1,37 @@
+name: Nyaa Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      torrent_id:
+        description: 'The ID of the torrent to scrape'
+        required: true
+        default: '123456'  # Default value, can be changed when dispatching
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+
+    - name: Run Nyaa Scraper
+      run: python nyaa_scraper.py ${{ github.event.inputs.torrent_id }}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: torrent-info
+        path: |
+          *.json
