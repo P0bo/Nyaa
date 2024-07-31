@@ -3,10 +3,10 @@ name: Nyaa Scraper
 on:
   workflow_dispatch:
     inputs:
-      torrent_id:
-        description: 'The ID of the torrent to scrape'
+      id_range:
+        description: 'The range of torrent IDs to scrape (format: id_start-id_end)'
         required: true
-        default: '123456'  # Default value, can be changed when dispatching
+        default: '12847-13748'
 
 jobs:
   scrape:
@@ -27,9 +27,9 @@ jobs:
         pip install requests beautifulsoup4
 
     - name: Run Nyaa Scraper
-      run: python nyaa_scraper.py ${{ github.event.inputs.torrent_id }}
+      run: python nyaa_scraper.py ${{ github.event.inputs.id_range }}
 
-    - name: Upload Artifact
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: torrent-info
