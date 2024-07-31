@@ -1,82 +1,105 @@
-# Nyaa-Api-Ts
+# Nyaa API Scraper
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Yash-Garg/Nyaa-Api-Ts)
+This project is a Python-based web scraper for the Nyaa torrent site. It fetches torrent information based on various categories, user uploads, and specific IDs, and saves the data to local JSON files.
 
-This API is an **Unofficial Nyaa API** rewritten in Typescript.
+## Features
 
-Previous Go API - [Yash-Garg/Nyaa-Api-Go](https://github.com/Yash-Garg/Nyaa-Api-Go)
+- Scrape torrent data by category
+- Scrape user upload data
+- Scrape specific torrent data by ID
+- Save scraped data to JSON files
+
+## Requirements
+
+- Python 3.6+
+- `requests` library
+- `beautifulsoup4` library
+
+## Installation
+
+1. **Clone the repository**:
+    ```sh
+    git clone https://github.com/yourusername/nyaa-api-scraper.git
+    cd nyaa-api-scraper
+    ```
+
+2. **Install the required Python libraries**:
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+    If you don't have `requirements.txt`, you can manually install the libraries:
+    ```sh
+    pip install requests beautifulsoup4
+    ```
 
 ## Usage
 
-- `username` and `id` are required parameters if using `/user/{username}` and `/id/{id}` endpoints.
+The script can be used to scrape different types of data from Nyaa. Below are the available commands and how to use them.
 
-- If no parameters are specified in other endpoints like `/anime`, `/manga`, etc. It will return the latest uploaded torrents in the respective category.
+### 1. Scrape Torrent Data by ID
 
-- For Filters, input `filter=1` for _No Remakes_ and `filter=2` for _Trusted Only_.
+Fetch detailed information about a specific torrent using its ID and save it to a JSON file.
 
-- #### Available Endpoints
+**Example Command**:
+```sh
+python nyaa_scraper.py --type id --id 12345 --output file_info.json
+```
 
-  | **Arguments**      | **Description**                                       |
-  | ------------------ | ----------------------------------------------------- |
-  | `q` **(Optional)** | Search query.                                         |
-  | `s` **(Optional)** | Sorting parameter                                     |
-  | `p` **(Optional)** | Page number                                           |
-  | `f` **(Optional)** | Filter option                                         |
-  | `o` **(Optional)** | Order of sorting. Defaults to **_Descending order_**. |
+### 2. Scrape User Uploads
 
-  - **Endpoints**
-    | **Category** | **Endpoint** |
-    |---------|---------|
-    | All | `/all` |
-    | Anime | `/anime` |
-    | Manga | `/manga` |
-    | Audio | `/audio` |
-    | Pictures | `/pictures` |
-    | Live Action | `/live_action` |
-    | Software | `/software` |
-    | ID | `/id` |
-    | User | `/user` |
+Fetch all torrents uploaded by a specific user and save them to a JSON file.
 
-  - **Sub-Categories** (Not applicable for `/user` and `/id`)
-    | **Category** | **Sub-Category** |
-    |------|------|
-    | Anime | `/amv`, `/eng`, `/non-eng`, `/raw` |
-    | Manga | `/eng`, `/non-eng`, `/raw` |
-    | Audio | `/lossy`, `/lossless` |
-    | Pictures | `/photos`, `/graphics` |
-    | Live Action | `/promo`, `/eng`, `/non-eng`, `/raw` |
-    | Software | `/application`, `/games` |
+**Example Command**:
+```sh
+python nyaa_scraper.py --type user --username someuser --output user_uploads.json
+```
 
-  - **Sorting Parameters**
-    | **Arguments** | **Methods** |
-    | ---- | ---- |
-    | Sort | `size`, `seeders`, `leechers`, `date`, `downloads` |
-    | Order | `asc`, `desc` |
+### 3. Scrape Torrent Data by Category
 
-- #### Search using ID
+Fetch torrents from a specific category and save them to a JSON file.
 
-  - `https://nyaa-api-ts.yashg.workers.dev/id/{id}`
+**Example Command**:
+```sh
+python nyaa_scraper.py --type category --category anime --subcategory eng --output anime_eng.json
+```
 
-- #### Search using category
+### Arguments
 
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}?q={search_query}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}?q={search_query}&s={sorting_parameter}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}?q={search_query}&s={sorting_parameter}&p={page_number}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}&f={filter}`
+- `--type`: Specifies the type of data to scrape (`id`, `user`, or `category`).
+- `--id`: The ID of the torrent (required if `--type` is `id`).
+- `--username`: The username of the uploader (required if `--type` is `user`).
+- `--category`: The category of torrents to scrape (required if `--type` is `category`).
+- `--subcategory`: The subcategory of torrents to scrape (optional).
+- `--output`: The name of the output JSON file (default is `output.json`).
 
-- #### Search using sub category
+## Example
 
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}/{sub_category}?q={search_query}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}/{sub_category}?q={search_query}&s={sorting_parameter}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}/{sub_category}?q={search_query}&s={sorting_parameter}&p={page_number}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}/{sub_category}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}`
-  - `https://nyaa-api-ts.yashg.workers.dev/{category}/{sub_category}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}&f={filter}`
+Here's a complete example of using the script to fetch and save torrent data by ID:
 
-- #### Search using username
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}`
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}?q={search_query}`
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}?q={search_query}&s={sorting_parameter}`
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}?q={search_query}&s={sorting_parameter}&p={page_number}`
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}`
-  - `https://nyaa-api-ts.yashg.workers.dev/user/{username}?q={search_query}&s={sorting_parameter}&p={page_number}&o={order}&f={filter}`
+```sh
+python nyaa_scraper.py --type id --id 12345 --output file_info.json
+```
+
+This command will fetch the torrent data with ID 12345 and save the details in `file_info.json`.
+
+## Constants and Configuration
+
+The script uses a `Constants` class to define base URLs and endpoint mappings. These can be customized in the script as needed.
+
+```python
+class Constants:
+    NyaaBaseUrl = "https://nyaa.si"
+    NyaaAltUrl = "https://nyaa.smartass08.xyz"
+    DefaultProfilePic = "https://raw.githubusercontent.com/Yash-Garg/Nyaa-Api-Go/dev/static/default.png"
+
+    NyaaEndpoints = {
+        "all": {"all": "0_0"},
+        "anime": {"all": "1_0", "amv": "1_1", "eng": "1_2", "non-eng": "1_3", "raw": "1_4"},
+        "audio": {"all": "2_0", "lossless": "2_1", "lossy": "2_2"},
+        "manga": {"all": "3_0", "eng": "3_1", "non-eng": "3_2", "raw": "3_3"},
+        "live_action": {"all": "4_0", "eng": "4_1", "promo": "4_2", "non-eng": "4_3", "raw": "4_4"},
+        "pictures": {"all": "5_0", "graphics": "5_1", "photos": "5_2"},
+        "software": {"all": "6_0", "applications": "6_1", "games": "6_2"},
+    }
+```
